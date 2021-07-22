@@ -10,11 +10,17 @@ below:
 ## Example
 
 ```rust
+use std::io;
+use std::fs;
+
+# fn main() -> Result<(), Box<dyn std::error::Error>> {
+# let arg = "-";
+
 // These must live longer than `readable`, and thus are declared first:
 let (mut stdin_read, mut file_read);
 
 // We need to ascribe the type to get dynamic dispatch.
-let readable: &mut dyn io::Read = if arg == '-' {
+let readable: &mut dyn io::Read = if arg == "-" {
     stdin_read = io::stdin();
     &mut stdin_read
 } else {
@@ -23,6 +29,9 @@ let readable: &mut dyn io::Read = if arg == '-' {
 };
 
 // Read from `readable` here.
+
+# Ok(())
+# }
 ```
 
 ## Motivation
@@ -40,13 +49,13 @@ for it.
 
 We do not need to allocate anything on the heap. Neither do we need to
 initialize something we won't use later, nor do we need to monomorphize the
-whole code that follows to work with both `File` or `Stdin`, with all the
+whole code that follows to work with both `File` or `Stdin`.
 
 ## Disadvantages
 
 The code needs more moving parts than the `Box`-based version:
 
-```rust
+```rust,ignore
 // We still need to ascribe the type for dynamic dispatch.
 let readable: Box<dyn io::Read> = if arg == "-" {
     Box::new(io::stdin())
@@ -74,8 +83,9 @@ Read`
 
 ## See also
 
-* [Finalisation in destructors](idioms/dtor-finally.md) and 
-[RAII guards](patterns/RAII.md) can benefit from tight control over lifetimes.
+* [Finalisation in destructors](dtor-finally.md) and
+[RAII guards](../patterns/behavioural/RAII.md) can benefit from tight control over
+lifetimes.
 * For conditionally filled `Option<&T>`s of (mutable) references, one can
 initialize an `Option<T>` directly and use its [`.as_ref()`] method to get an
 optional reference.

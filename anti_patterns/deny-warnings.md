@@ -36,7 +36,10 @@ All this conspires to potentially break the build whenever something changes.
 
 Furthermore, crates that supply additional lints (e.g. [rust-clippy]) can no
 longer be used unless the annotation is removed. This is mitigated with
-[--cap-lints].
+[--cap-lints]. The `--cap-lints=warn` command line argument, turns all `deny`
+lint errors into warnings. But be aware that `forbid` lints are stronger than
+`deny` hence the 'forbid' level cannot be overridden to be anything lower than
+an error. As a result `forbid` lints will still stop compilation.
 
 ## Alternatives
 
@@ -45,7 +48,7 @@ setting from the code, and second, we can name the lints we want to deny
 explicitly.
 
 The following command line will build with all warnings set to `deny`:
- 
+
 ```RUSTFLAGS="-D warnings" cargo build```
 
 This can be done by any individual developer (or be set in a CI tool like
@@ -53,28 +56,20 @@ Travis, but remember that this may break the build when something changes)
 without requiring a change to the code.
 
 Alternatively, we can specify the lints that we want to `deny` in the code.
-Here is a list of warning lints that is (hopefully) safe to deny:
+Here is a list of warning lints that is (hopefully) safe to deny (as of Rustc 1.48.0):
 
-```rust
+```rust,ignore
 #[deny(bad-style,
        const-err,
        dead-code,
-       extra-requirement-in-impl,
        improper-ctypes,
-       legacy-directory-ownership,
        non-shorthand-field-patterns,
        no-mangle-generic-items,
        overflowing-literals,
        path-statements ,
        patterns-in-fns-without-body,
-       plugin-as-library,
        private-in-public,
-       private-no-mangle-fns,
-       private-no-mangle-statics,
-       raw-pointer-derive,
-       safe-extern-statics,
        unconditional-recursion,
-       unions-with-drop-fields,
        unused,
        unused-allocation,
        unused-comparisons,
@@ -84,7 +79,7 @@ Here is a list of warning lints that is (hopefully) safe to deny:
 
 In addition, the following `allow`ed lints may be a good idea to `deny`:
 
-```rust
+```rust,ignore
 #[deny(missing-debug-implementations,
        missing-docs,
        trivial-casts,
@@ -102,6 +97,7 @@ certain that there will be more deprecated APIs in the future.
 
 ## See also
 
+- [A collection of all clippy lints](https://rust-lang.github.io/rust-clippy/master)
 - [deprecate attribute] documentation
 - Type `rustc -W help` for a list of lints on your system. Also type
 `rustc --help` for a general list of options

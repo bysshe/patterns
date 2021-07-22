@@ -10,10 +10,9 @@ behaviour).
 Furthermore, the visitor pattern allows separating the traversal of
 a collection of objects from the operations performed on each object.
 
-
 ## Example
 
-```rust
+```rust,ignore
 // The data we will visit
 mod ast {
     pub enum Stmt {
@@ -70,14 +69,12 @@ impl Visitor<i64> for Interpreter {
 One could implement further visitors, for example a type checker, without having
 to modify the AST data.
 
-
 ## Motivation
 
 The visitor pattern is useful anywhere that you want to apply an algorithm to
 heterogeneous data. If data is homogeneous, you can use an iterator-like pattern.
 Using a visitor object (rather than a functional approach) allows the visitor to
 be stateful and thus communicate information between nodes.
-
 
 ## Discussion
 
@@ -87,7 +84,7 @@ it between algorithms (and also to provide noop default methods). In Rust, the
 common way to do this is to provide `walk_*` functions for each datum. For
 example,
 
-```rust
+```rust,ignore
 pub fn walk_expr(visitor: &mut Visitor, e: &Expr) {
     match *e {
         Expr::IntLit(_) => {},
@@ -112,5 +109,5 @@ The visitor pattern is a common pattern in most OO languages.
 
 [Wikipedia article](https://en.wikipedia.org/wiki/Visitor_pattern)
 
-The [fold](fold.md) pattern is similar to visitor but produces a new version of
-the visited data structure.
+The [fold](../creational/fold.md) pattern is similar to visitor but produces
+a new version of the visited data structure.

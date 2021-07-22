@@ -1,4 +1,4 @@
-# `mem::replace` to keep owned values in changed enums
+# `mem::{take(_), replace(_)}` to keep owned values in changed enums
 
 ## Description
 
@@ -19,26 +19,19 @@ enum MyEnum {
 }
 
 fn a_to_b(e: &mut MyEnum) {
-
-    // we mutably borrow `e` here. This precludes us from changing it directly
-    // as in `*e = ...`, because the borrow checker won't allow it. Therefore
-    // the assignment to `e` must be outside the `if let` clause. 
-    *e = if let MyEnum::A { ref mut name, x: 0 } = *e {
-    
+    if let MyEnum::A { name, x: 0 } = e {
         // this takes out our `name` and put in an empty String instead
         // (note that empty strings don't allocate).
-        // Then, construct the new enum variant (which will 
-        // be assigned to `*e`, because it is the result of the `if let` expression).
-        MyEnum::B { name: mem::replace(name, String::new()) }
-        
-    // In all other cases, we return immediately, thus skipping the assignment
-    } else { return }
+        // Then, construct the new enum variant (which will
+        // be assigned to `*e`).
+        *e = MyEnum::B { name: mem::take(name) }
+    }
 }
 ```
 
 This also works with more variants:
 
-```Rust
+```rust
 use std::mem;
 
 enum MultiVariateEnum {
@@ -49,12 +42,12 @@ enum MultiVariateEnum {
 }
 
 fn swizzle(e: &mut MultiVariateEnum) {
-    use self::MultiVariateEnum::*;
-    *e = match *e {
+    use MultiVariateEnum::*;
+    *e = match e {
         // Ownership rules do not allow taking `name` by value, but we cannot
         // take the value out of a mutable reference, unless we replace it:
-        A { ref mut name } => B { name: mem::replace(name, String::new()) },
-        B { ref mut name } => A { name: mem::replace(name, String::new()) },
+        A { name } => B { name: mem::take(name) },
+        B { name } => A { name: mem::take(name) },
         C => D,
         D => C
     }
@@ -72,18 +65,21 @@ change the value (as in the example above).
 The borrow checker won't allow us to take out `name` of the enum (because
 *something* must be there. We could of course `.clone()` name and put the clone
 into our `MyEnum::B`, but that would be an instance of the [Clone to satisfy
-the borrow checker] antipattern. Anyway, we can avoid the extra allocation by
-changing `e` with only a mutable borrow.
+the borrow checker](../anti_patterns/borrow_clone.md) antipattern. Anyway, we
+can avoid the extra allocation by changing `e` with only a mutable borrow.
 
-`mem::replace` lets us swap out the value, replacing it with something else. In
-this case, we put in an empty `String`, which does not need to allocate. As a
-result, we get the original `name` *as an owned value*. We can then wrap this in
-another enum.
+`mem::take` lets us swap out the value, replacing it with it's default value,
+and returning the previous value. For `String`, the default value is an empty
+`String`, which does not need to allocate. As a result, we get the original
+`name` *as an owned value*. We can then wrap this in another enum.
+
+__NOTE:__ `mem::replace` is very similar, but allows us to specify what to
+replace the value with. An equivalent to our `mem::take` line would be
+`mem::replace(name, String::new())`.
 
 Note, however, that if we are using an `Option` and want to replace its
 value with a `None`, `Option`’s `take()` method provides a shorter and
 more idiomatic alternative.
-
 
 ## Advantages
 
@@ -96,6 +92,10 @@ borrow checker. The compiler may fail to optimize away the double store,
 resulting in reduced performance as opposed to what you'd do in unsafe
 languages.
 
+Furthermore, the type you are taking needs to implement the [`Default`
+trait](./default.md). However, if the type you're working with doesn't
+implement this, you can instead use `mem::replace`.
+
 ## Discussion
 
 This pattern is only of interest in Rust. In GC'd languages, you'd take the
@@ -107,10 +107,7 @@ However, in Rust, we have to do a little more work to do this. An owned value
 may only have one owner, so to take it out, we need to put something back in –
 like Indiana Jones, replacing the artifact with a bag of sand.
 
-
 ## See also
 
-This gets rid of the [Clone to satisfy the borrow checker] antipattern in a
-specific case.
-
-[Clone to satisfy the borrow checker](TODO: Hinges on PR #23)
+This gets rid of the [Clone to satisfy the borrow checker](../anti_patterns/borrow_clone.md)
+antipattern in a specific case.

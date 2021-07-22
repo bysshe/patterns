@@ -5,7 +5,6 @@
 Abuse the `Deref` trait to emulate inheritance between structs, and thus reuse
 methods.
 
-
 ## Example
 
 Sometimes we want to emulate the following common pattern from OO languages such
@@ -27,14 +26,18 @@ public static void main(String[] args) {
 We can use the deref polymorphism anti-pattern to do so:
 
 ```rust
+use std::ops::Deref;
+
 struct Foo {}
 
 impl Foo {
-    fn m(&self) { ... }
+    fn m(&self) {
+        //..
+    }
 }
 
 struct Bar {
-    f: Foo
+    f: Foo,
 }
 
 impl Deref for Bar {
@@ -45,7 +48,7 @@ impl Deref for Bar {
 }
 
 fn main() {
-    let b = Bar { Foo {} };
+    let b = Bar { f: Foo {} };
     b.m();
 }
 ```
@@ -63,19 +66,17 @@ have two unrelated types. However, since the dot operator does implicit
 dereferencing, it means that the method call will search for methods on `Foo` as
 well as `Bar`.
 
-
 ## Advantages
 
 You save a little boilerplate, e.g.,
 
-```rust
+```rust,ignore
 impl Bar {
-    fn m(&self) { 
+    fn m(&self) {
         self.f.m()
     }
 }
 ```
-
 
 ## Disadvantages
 
@@ -98,7 +99,6 @@ interfaces, class-based privacy, or other inheritance-related features. So, it
 gives an experience that will be subtly surprising to programmers used to Java
 inheritance, etc.
 
-
 ## Discussion
 
 There is no one good alternative. Depending on the exact circumstances it might
@@ -120,9 +120,9 @@ operator is a case where the ergonomics strongly favour an implicit mechanism,
 but the intention is that this is limited to degrees of indirection, not
 conversion between arbitrary types.
 
-
 ## See also
 
-[Collections are smart pointers idiom](../idioms/deref.md).
-
-[Documentation for `Deref` trait](https://doc.rust-lang.org/std/ops/trait.Deref.html).
+- [Collections are smart pointers idiom](../idioms/deref.md).
+- Delegation crates for less boilerplate like [delegate](https://crates.io/crates/delegate)
+  or [ambassador](https://crates.io/crates/ambassador)
+- [Documentation for `Deref` trait](https://doc.rust-lang.org/std/ops/trait.Deref.html).

@@ -11,7 +11,7 @@ fold in the usual sense. See the discussion below for more details.
 
 ## Example
 
-```rust
+```rust,ignore
 // The data we will fold, a simple AST.
 mod ast {
     pub enum Stmt {
@@ -70,7 +70,6 @@ A folder can also be defined to map one data structure to a different (but
 usually similar) data structure. For example, we could fold an AST into a HIR
 tree (HIR stands for high-level intermediate representation).
 
-
 ## Motivation
 
 It is common to want to map a data structure by performing some operation on
@@ -82,7 +81,6 @@ appropriate.
 
 Like the visitor pattern, the fold pattern allows us to separate traversal of a
 data structure from the operations performed to each node.
-
 
 ## Discussion
 
@@ -100,14 +98,13 @@ exclusively, the original copy of the data structure cannot be re-used. On the
 other hand if a node is not changed, reusing it is very efficient.
 
 If we were to operate on borrowed references, the original data structure can be
-reused, however, if a node is unchanged it must be cloned, which can be
+reused; however, a node must be cloned even if unchanged, which can be
 expensive.
 
 Using a reference counted pointer gives the best of both worlds - we can reuse
 the original data structure and we don't need to clone unchanged nodes. However,
 they are less ergonomic to use and mean that the data structures cannot be
 mutable.
-
 
 ## See also
 
@@ -119,7 +116,7 @@ In other languages, fold is usually used in the sense of Rust's iterators,
 rather than this pattern. Some functional languages have powerful constructs for
 performing flexible maps over data structures.
 
-The [visitor](visitor.md) pattern is closely related to fold. They share the
-concept of walking a data structure performing an operation on each node.
-However, the visitor does not create a new data structure nor consume the old
-one.
+The [visitor](../behavioural/visitor.md) pattern is closely related to fold.
+They share the concept of walking a data structure performing an operation on
+each node. However, the visitor does not create a new data structure nor consume
+the old one.
